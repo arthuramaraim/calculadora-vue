@@ -1,24 +1,24 @@
 <template>
    
     <div class="calculator">
-        <Display value="" />
-        <Button label="AC" triple />
-        <Button label="/" operation />
-        <Button label="7" />
-        <Button label="8" />
-        <Button label="9" />
-        <Button label="*" operation />
-        <Button label="4" />
-        <Button label="5" />
-        <Button label="6" />
-        <Button label="-" operation />
-        <Button label="1" />
-        <Button label="2" />
-        <Button label="3" />
-        <Button label="+" operation />
-        <Button label="0" double />
-        <Button label="."  />
-        <Button label="=" operation />
+        <Display :value="displayValue" />
+        <Button label="AC" triple  @onClick="clearMemory" />
+        <Button label="/" operation @onClick="setOperation" />
+        <Button label="7" @onClick="addDigit" />
+        <Button label="8" @onClick="addDigit" />
+        <Button label="9" @onClick="addDigit" />
+        <Button label="*" @onClick="setOperation" operation />
+        <Button label="4" @onClick="addDigit" />
+        <Button label="5" @onClick="addDigit" />
+        <Button label="6" @onClick="addDigit" />
+        <Button label="-" @onClick="setOperation" operation />
+        <Button label="1" @onClick="addDigit" />
+        <Button label="2" @onClick="addDigit" />
+        <Button label="3" @onClick="addDigit" />
+        <Button label="+" @onClick="setOperation" operation />
+        <Button label="0" @onClick="addDigit" double />
+        <Button label="." @onClick="addDigit" />
+        <Button label="=" @onClick="setOperation" operation />
 
  
     </div>
@@ -31,9 +31,68 @@ import Button from "../components/Button.vue"
 
 
 export default {
+    data: function() {
+        return {
+            displayValue: "0",
+            clearDisplay: false,
+            operation: null,
+            value: [0,0],
+            current: 0
+        }
+    },
     components: {
         Button,
         Display
+    },
+
+    methods: {
+        clearMemory() {
+            //atribuindo o estado inicial do objeto
+            Object.assign(this.$data, this.$options.data())
+        },
+        setOperation(operation) {
+            if(this.current === 0){
+                this.operation = operation;
+                this.current = 1;
+                this.clearDisplay = true;
+            } else {
+                const equals = operation === "=";
+                const currentOperation = this.operation;
+
+                try {
+                    this.value[0] = eval(
+                        `${this.value[0]} ${currentOperation} ${this.value[1]}`
+                    )
+                } catch (e) {
+                    this.$emit('onError', e)
+                }
+
+                this.value[1] = 0
+
+                this.displayValue = this.value[0];
+                this.operation = equals ? null : operation
+                this.current = equals ? 0 : 1
+                this.clearDisplay = !equals;
+            }
+        },
+        addDigit(n) {
+            if(n === "." && this.displayValue.includes(".")){
+                return
+            }
+            const clearDisplay = this.displayValue === "0" || this.clearDisplay;
+            
+            const currentValue = clearDisplay ? "" : this.displayValue;
+            const displayValue = currentValue + n;
+            
+            this.displayValue = displayValue;
+            this.clearDisplay = false;
+
+            if( n !== ".") {
+                const i = this.current;
+                const newValue = parseFloat(displayValue);
+                this.value[i] = newValue;
+            }
+        }
     }
 
 }
